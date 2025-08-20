@@ -1,9 +1,18 @@
 #!/bin/bash
-isExistApp="$(pgrep httpd)"
-if [[ -n $isExistApp ]]; then
-sudo systemctl stop httpd.service
-fi
-isExistApp="$(pgrep tomcat)"
-if [[ -n $isExistApp ]]; then
-sudo systemctl stop tomcat.service
-fi
+set -euo pipefail
+
+stop_if_active () {
+  local svc="$1"
+  if systemctl is-active --quiet "$svc"; then
+    echo "[Stop] Stopping $svc..."
+    systemctl stop "$svc"
+  else
+    echo "[Stop] $svc not active; skipping."
+  fi
+}
+
+# Stop front-end first, then backend
+stop_if_active httpd
+stop_if_active tomcat9
+
+echo "[Stop] Done."

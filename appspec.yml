@@ -1,18 +1,21 @@
 version: 0.0
 os: linux
+
 files:
+  # NOTE: Tomcat 9 on AL2 resolves this dir; if your AMI differs, switch to /var/lib/tomcat/webapps/
   - source: /target/java-web-app.war
     destination: /usr/share/tomcat/webapps/
+
 hooks:
   BeforeInstall:
     - location: scripts/install_dependencies.sh
       timeout: 300
       runas: root
-  ApplicationStart:
-    - location: scripts/start_server.sh
-      timeout: 300
-      runas: root
   ApplicationStop:
     - location: scripts/stop_server.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: scripts/start_server.sh
       timeout: 300
       runas: root

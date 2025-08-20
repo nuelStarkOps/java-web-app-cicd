@@ -116,7 +116,7 @@ Resources:
         - 
           Ref: ServerRole
 
-  WebServer:
+    WebServer:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref AmazonLinuxAMIID
@@ -127,13 +127,28 @@ Resources:
           DeviceIndex: 0
           GroupSet: 
             - Ref: PublicSecurityGroup
-          SubnetId: 
-            Ref: PublicSubnetA
+          SubnetId: !Ref PublicSubnetA
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          yum update -y
+          yum install -y ruby wget
+          cd /home/ec2-user
+          REGION="${AWS::Region}"
+          AGENT_URL="https://aws-codedeploy-${REGION}.s3.${REGION}.amazonaws.com/latest/install"
+          echo "[UserData] Installing CodeDeploy agent from ${AGENT_URL} ..."
+          wget -q "${AGENT_URL}" -O install
+          chmod +x ./install
+          ./install auto
+          systemctl enable codedeploy-agent
+          systemctl start codedeploy-agent
       Tags:
         - Key: 'Name'
           Value: !Join ['', [!Ref 'AWS::StackName', '::WebServer'] ]
         - Key: 'role'
           Value: 'webserver'
+
 
 Outputs:
   URL:
